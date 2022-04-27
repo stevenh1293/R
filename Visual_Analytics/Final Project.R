@@ -1,7 +1,11 @@
+#--------------------------------------------------------Load Packages--------------------------------------------------#
+library(reshape2)
 library(dplyr)
 library(ggplot2)
 library(ggExtra)
 library(ggthemes)
+library(kableExtra)
+library(usmap)
 
 #-----------------------------------------------------Set working directory--------------------------------------------#
 
@@ -28,14 +32,9 @@ data <- data[,-rm_col_index]
 #Clean up column names, I prefer an underscore to a period but this is just preference
 colnames(data) <- gsub('\\.','_', colnames(data))
 
-
-#-------Investigate job titles--------#
-
 #We will have to manually review the job titles to figure out a selection of base level data scientist jobs to analyze
-Data_Scientist_Roles <- unique(data$Job_Title[grep('Data Scientist',data$Job_Title)])
-
-#Since we have an industry variable, we can remove the more focused data scientist job titles to group more jobs together
-data$Job_Title[grep('^Data Scientist',data$Job_Title)]
+Data_Scientist_Roles <- unique(data$Job_Title[grep('^Data Scientist',data$Job_Title)])
+#   Note that I am starting with Data Scientist at the beginning here because most of the titles are very messy, and I dont have time to exam all of them for this project.
 
 #We see a lot of data scientist roles with higher classification, we want to mostly keep base level data scienteist roles.
 DS_DF <- data[grepl('^Data Scientist',data$Job_Title) 
@@ -54,7 +53,6 @@ DS_DF <- data[grepl('^Data Scientist',data$Job_Title)
 DS_DF$Job_Title[1:length(DS_DF$Job_Title)] <- 'Data Scientist'
 
 #Now we will do the same for data analyst
-
 Data_Analyst_Roles <- unique(data$Job_Title[grep('Data Analyst',data$Job_Title)])
 DA_DF <- data[grepl('Data Analyst',data$Job_Title) 
               & !grepl('2',data$Job_Title)
@@ -71,6 +69,8 @@ DA_DF <- data[grepl('Data Analyst',data$Job_Title)
               & !grepl('IV',data$Job_Title)
               & !grepl('V',data$Job_Title)
               & !grepl('Master',data$Job_Title),]
+
+#Now we can rename all this to Data Analyst to group them together for the analysis. 
 DA_DF$Job_Title[1:length(DA_DF$Job_Title)] <- 'Data Analyst'
 
 
@@ -149,7 +149,7 @@ for (i in seq(1:length(Row_Order))){
 }
 
 DP_Minimum_Average_Salary <- DP_Minimum_Average_Salary[-1,]
-DP_Minimum_Average_Salary <- DP_Mimum_Average_Salary[-15:-16,]
+DP_Minimum_Average_Salary <- DP_Minimum_Average_Salary[-15:-16,]
 DP_Minimum_Average_Salary <- as.data.frame(DP_Minimum_Average_Salary)
 DP_Minimum_Average_Salary$Average <- as.numeric(DP_Minimum_Average_Salary$Average)
 
@@ -168,7 +168,7 @@ DP_Maximum_Average_Salary <- as.data.frame(DP_Maximum_Average_Salary)
 DP_Maximum_Average_Salary <- DP_Maximum_Average_Salary[-15:-16,]
 DP_Maximum_Average_Salary$Average <- as.numeric(DP_Maximum_Average_Salary$Average)
 
-#Next we will look at min and max salaries vs types of ownerships by job title
+#Next we will look at min and max salaries vs types of ownership by job title
 #After looking through the types of ownership, some are too small to be considered for a sample size. We will only take samples from types which have sample size over 30
 Type_Ownership_Totals <- data.frame(Data_Proffesions_DF %>% group_by(Type_of_ownership) %>% tally())
 Type_Ownership_Over_30 <- Type_Ownership_Totals$Type_of_ownership[which(Type_Ownership_Totals$n > 30)]
@@ -197,11 +197,39 @@ Type_Ownership_Minimum_Average_Salary <- Type_Ownership_Minimum_Average_Salary[-
 colnames(Type_Ownership_Minimum_Average_Salary) <- c('Job_Title','TypeOwn','Average')
 Type_Ownership_Minimum_Average_Salary <- as.data.frame(Type_Ownership_Minimum_Average_Salary)
 Type_Ownership_Minimum_Average_Salary$Average <- as.numeric(Type_Ownership_Minimum_Average_Salary$Average)
+
+#Last, we will find out which state has the highest min and max salary by job title
+State_Totals <- data.frame(Data_Proffesions_DF %>% group_by(State) %>% tally())
+States_Over_5 <- State_Totals$State[which(State_Totals$n > 5)]
+State_Minimum_Average_Salary <- matrix(ncol = 3)
+for (i in seq(1:length(States_Over_5))){
+  row_index <- which(Data_Proffesions_DF$State == States_Over_5[i] & Data_Proffesions_DF$Job_Title == 'Data Analyst')
+  State_Minimum_Average_Salary <- rbind(State_Minimum_Average_Salary,matrix(c('Data Analyst',States_Over_5[i], round(mean(Data_Proffesions_DF$Min_Salary[row_index]))),ncol = 3))
+  row_index <- which(Data_Proffesions_DF$State == States_Over_5[i] & Data_Proffesions_DF$Job_Title == 'Data Scientist')
+  State_Minimum_Average_Salary <- rbind(State_Minimum_Average_Salary,matrix(c('Data Scientist',States_Over_5[i], round(mean(Data_Proffesions_DF$Min_Salary[row_index]))),ncol = 3))
+}
+
+State_Minimum_Average_Salary <- State_Minimum_Average_Salary[-1,]
+colnames(State_Minimum_Average_Salary) <- c('Job_Title','State','Average')
+State_Minimum_Average_Salary <- as.data.frame(State_Minimum_Average_Salary)
+State_Minimum_Average_Salary$Average <- as.numeric(State_Minimum_Average_Salary$Average)
+
+State_Maximum_Average_Salary <- matrix(ncol = 3)
+for (i in seq(1:length(States_Over_5))){
+  row_index <- which(Data_Proffesions_DF$State == States_Over_5[i] & Data_Proffesions_DF$Job_Title == 'Data Analyst')
+  State_Maximum_Average_Salary <- rbind(State_Maximum_Average_Salary,matrix(c('Data Analyst',States_Over_5[i], round(mean(Data_Proffesions_DF$Max_Salary[row_index]))),ncol = 3))
+  row_index <- which(Data_Proffesions_DF$State == States_Over_5[i] & Data_Proffesions_DF$Job_Title == 'Data Scientist')
+  State_Maximum_Average_Salary <- rbind(State_Maximum_Average_Salary,matrix(c('Data Scientist',States_Over_5[i], round(mean(Data_Proffesions_DF$Max_Salary[row_index]))),ncol = 3))
+}
+
+State_Maximum_Average_Salary <- State_Maximum_Average_Salary[-1,]
+colnames(State_Maximum_Average_Salary) <- c('Job_Title','State','Average')
+State_Maximum_Average_Salary <- as.data.frame(State_Maximum_Average_Salary)
+State_Maximum_Average_Salary$Average <- as.numeric(State_Maximum_Average_Salary$Average)
+
 #---------------------------------------------------------------Data Visualizing------------------------------------------------------------#
 
 #---Min and Max Salary vs Company Rating by Job Title-----#
-
-
 g1 <- ggplot(Data_Proffesions_DF, aes(Rating, Min_Salary, color = Job_Title)) +
   geom_point() +
   scale_y_continuous(n.breaks = 10) +
@@ -218,9 +246,7 @@ g1 <- ggplot(Data_Proffesions_DF, aes(Rating, Min_Salary, color = Job_Title)) +
         axis.text.x = element_text(size = 16),
         axis.title.y = element_text(size = 20),
         axis.text.y = element_text(size = 16))
-
 ggMarginal(g1 + theme(legend.position = "left"), type = "density", groupFill = T)
-
 
 g2 <- ggplot(Data_Proffesions_DF, aes(Rating, Max_Salary, color = Job_Title)) +
   geom_point() +
@@ -238,12 +264,9 @@ g2 <- ggplot(Data_Proffesions_DF, aes(Rating, Max_Salary, color = Job_Title)) +
         axis.text.x = element_text(size = 16),
         axis.title.y = element_text(size = 20),
         axis.text.y = element_text(size = 16))
-
 ggMarginal(g2 + theme(legend.position = "left"), type = "density", groupFill = T)
 
-
 #---Min and Max Salary Distribution by Job Title-----#
-
 g3 <- ggplot(Data_Proffesions_DF, aes(Job_Title, Min_Salary, color = Job_Title)) +
   geom_violin() +
   geom_point() +
@@ -261,7 +284,6 @@ g3 <- ggplot(Data_Proffesions_DF, aes(Job_Title, Min_Salary, color = Job_Title))
         axis.text.x = element_text(size = 16),
         axis.title.y = element_text(size = 20),
         axis.text.y = element_text(size = 16))
-
 plot(g3)
 
 g4 <- ggplot(Data_Proffesions_DF, aes(Job_Title, Max_Salary, color = Job_Title)) +
@@ -281,17 +303,15 @@ g4 <- ggplot(Data_Proffesions_DF, aes(Job_Title, Max_Salary, color = Job_Title))
         axis.text.x = element_text(size = 16),
         axis.title.y = element_text(size = 20),
         axis.text.y = element_text(size = 16))
-
 plot(g4)
 
 #-------Average Minimum and Maximum Salary by Company Size-----------#
-
 g5 <- ggplot(DP_Minimum_Average_Salary, aes(Employees, Average, fill = Job_Title)) +
   geom_bar(stat = 'identity', position = 'dodge', color = 'black') +
   scale_y_continuous(breaks = seq(0,120000,20000),limits = c(0,120000),expand = c(0,0))+
   scale_x_discrete(labels = Row_Order) +
   theme_calc() +
-  labs(x = 'Company Size', y = 'Minimum Average Salary', fill = "Job Title") +
+  labs(x = 'Company Size (Employee Range)', y = 'Minimum Average Salary', fill = "Job Title") +
   ggtitle('Minimum Average Salary vs Company Size by Job Title') +
   theme(plot.title = element_text(hjust = 0.5, vjust = .25, size = 20),
         legend.key.size = unit(2, 'cm'),
@@ -304,7 +324,6 @@ g5 <- ggplot(DP_Minimum_Average_Salary, aes(Employees, Average, fill = Job_Title
         axis.title.y = element_text(size = 20),
         axis.text.y = element_text(size = 16),
         axis.ticks.length=unit(.25, "cm"))
-
 plot(g5)
 
 g6 <- ggplot(DP_Maximum_Average_Salary, aes(Employees, Average, fill = Job_Title)) +
@@ -312,7 +331,7 @@ g6 <- ggplot(DP_Maximum_Average_Salary, aes(Employees, Average, fill = Job_Title
   scale_y_continuous(breaks = seq(0,180000,30000),limits = c(0,180000),expand = c(0,0))+
   scale_x_discrete(labels = Row_Order) +
   theme_calc() +
-  labs(x = 'Company Size', y = 'Maximum Average Salary', fill = "Job Title") +
+  labs(x = 'Company Size (Employee Range)', y = 'Maximum Average Salary', fill = "Job Title") +
   ggtitle('Maximum Average Salary vs Company Size by Job Title') +
   theme(plot.title = element_text(hjust = 0.5, vjust = .25, size = 20),
         legend.key.size = unit(2, 'cm'),
@@ -325,8 +344,10 @@ g6 <- ggplot(DP_Maximum_Average_Salary, aes(Employees, Average, fill = Job_Title
         axis.title.y = element_text(size = 20),
         axis.text.y = element_text(size = 16),
         axis.ticks.length=unit(.25, "cm"))
-
 plot(g6)
+
+#-----Average min and max salary vs type of ownership by job title-------------#
+
 
 g7 <- ggplot(Type_Ownership_Minimum_Average_Salary, aes(TypeOwn, Average, fill = Job_Title)) +
   geom_bar(stat = 'identity', position = 'dodge', color = 'black') +
@@ -345,7 +366,6 @@ g7 <- ggplot(Type_Ownership_Minimum_Average_Salary, aes(TypeOwn, Average, fill =
         axis.title.y = element_text(size = 20),
         axis.text.y = element_text(size = 16),
         axis.ticks.length=unit(.25, "cm"))
-
 plot(g7)
 
 g8 <- ggplot(Type_Ownership_Maximum_Average_Salary, aes(TypeOwn, Average, fill = Job_Title)) +
@@ -365,7 +385,121 @@ g8 <- ggplot(Type_Ownership_Maximum_Average_Salary, aes(TypeOwn, Average, fill =
         axis.title.y = element_text(size = 20),
         axis.text.y = element_text(size = 16),
         axis.ticks.length=unit(.25, "cm"))
-
 plot(g8)
 
+#------Average min and max salary vs state by job title-------#
+DAMSDF <- Data_Proffesions_DF[Data_Proffesions_DF$Job_Title == "Data Analyst",]
+DAMSDF <- data.frame(state=DAMSDF$State,val=DAMSDF$Min_Salary)
+DAMSDF <- as.data.frame(round(tapply(DAMSDF$val, DAMSDF$state, mean)))
+colnames(DAMSDF) <- 'val'
+DAMSDF$state <- rownames(DAMSDF)
+rownames(DAMSDF) <- NULL
 
+plot_usmap(data = DAMSDF, values = 'val', color = 'black') + 
+  scale_fill_continuous(low = 'white', high = 'dark blue',
+                        name = "Minimum Salary Average",
+                        breaks = seq(0,120000,20000),
+                        labels = seq(0,120000,20000),
+                        limits = c(0,120000)) +
+  labs(title = "Data Analyst Minimum Salary Average") +
+  theme(plot.title = element_text(hjust = 0.5, vjust = .25, size = 25),
+        legend.key.size = unit(.1, 'cm'),
+        legend.key.height = unit(1.75, 'cm'),
+        legend.key.width = unit(1.25, 'cm'),
+        legend.title = element_text(size=16),
+        legend.text = element_text(size=12),
+        legend.position = 'right',
+        legend.direction = 'vertical')
+
+DAMXDF <- Data_Proffesions_DF[Data_Proffesions_DF$Job_Title == "Data Analyst",]
+DAMXDF <- data.frame(state=DAMXDF$State,val=DAMXDF$Max_Salary)
+DAMXDF <- as.data.frame(round(tapply(DAMXDF$val, DAMXDF$state, mean)))
+colnames(DAMXDF) <- 'val'
+DAMXDF$state <- rownames(DAMXDF)
+rownames(DAMXDF) <- NULL
+
+plot_usmap(data = DAMXDF, values = 'val', color = 'black') + 
+  scale_fill_continuous(low = 'white', high = 'dark blue',
+                        name = "Maximum Salary Average",
+                        breaks = seq(0,180000,20000),
+                        labels = seq(0,180000,20000),
+                        limits = c(0,180000)) +
+  labs(title = "Data Analyst Maximum Salary Average") +
+  theme(plot.title = element_text(hjust = 0.5, vjust = .25, size = 25),
+        legend.key.size = unit(.1, 'cm'),
+        legend.key.height = unit(1.75, 'cm'),
+        legend.key.width = unit(1.25, 'cm'),
+        legend.title = element_text(size=16),
+        legend.text = element_text(size=12),
+        legend.position = 'right',
+        legend.direction = 'vertical')
+
+DSMXDF <- Data_Proffesions_DF[Data_Proffesions_DF$Job_Title == "Data Scientist",]
+DSMXDF <- data.frame(state=DSMXDF$State,val=DSMXDF$Max_Salary)
+DSMXDF <- as.data.frame(round(tapply(DSMXDF$val, DSMXDF$state, mean)))
+colnames(DSMXDF) <- 'val'
+DSMXDF$state <- rownames(DSMXDF)
+rownames(DSMXDF) <- NULL
+
+plot_usmap(data = DSMXDF, values = 'val', color = 'black') + 
+  scale_fill_continuous(low = 'white', high = 'dark blue',
+                        name = "Maximum Salary Average",
+                        breaks = seq(0,180000,20000),
+                        labels = seq(0,180000,20000),
+                        limits = c(0,180000)) +
+  labs(title = "Data Scientist Maximum Salary Average") +
+  theme(plot.title = element_text(hjust = 0.5, vjust = .25, size = 25),
+        legend.key.size = unit(.1, 'cm'),
+        legend.key.height = unit(1.75, 'cm'),
+        legend.key.width = unit(1.25, 'cm'),
+        legend.title = element_text(size=16),
+        legend.text = element_text(size=12),
+        legend.position = 'right',
+        legend.direction = 'vertical')
+
+DSMSDF <- Data_Proffesions_DF[Data_Proffesions_DF$Job_Title == "Data Scientist",]
+DSMSDF <- data.frame(state=DSMSDF$State,val=DSMSDF$Min_Salary)
+DSMSDF <- as.data.frame(round(tapply(DSMSDF$val, DSMSDF$state, mean)))
+colnames(DSMSDF) <- 'val'
+DSMSDF$state <- rownames(DSMSDF)
+rownames(DSMSDF) <- NULL
+
+plot_usmap(data = DSMSDF, values = 'val', color = 'black') + 
+  scale_fill_continuous(low = 'white', high = 'dark blue',
+                        name = "Minimum Salary Average",
+                        breaks = seq(0,140000,20000),
+                        labels = seq(0,140000,20000),
+                        limits = c(0,140000)) +
+  labs(title = "Data Scientist Minimum Salary Average") +
+  theme(plot.title = element_text(hjust = 0.5, vjust = .25, size = 25),
+        legend.key.size = unit(.1, 'cm'),
+        legend.key.height = unit(1.75, 'cm'),
+        legend.key.width = unit(1.25, 'cm'),
+        legend.title = element_text(size=16),
+        legend.text = element_text(size=12),
+        legend.position = 'right',
+        legend.direction = 'vertical')
+
+#--------------------------------------------------Tables of findings------------------------------------------------------------------#
+DS_Jobs_DF <- Data_Proffesions_DF[which(Data_Proffesions_DF$Job_Title == 'Data Scientist' 
+                                        & Data_Proffesions_DF$Rating > 3.5
+                                        & Data_Proffesions_DF$Employees == '51-200'
+                                        #& c(Data_Proffesions_DF$Type_of_ownership == 'Company - Public' | Data_Proffesions_DF$Type_of_ownership == 'Subsidiary or Business Segment')
+                                        & Data_Proffesions_DF$State == 'CA'),]
+
+DA_Jobs_DF <- Data_Proffesions_DF[which(Data_Proffesions_DF$Job_Title == 'Data Analyst' 
+                                        & Data_Proffesions_DF$Rating > 3.0
+                                        & Data_Proffesions_DF$Employees == '1-50'
+                                        & c(Data_Proffesions_DF$Type_of_ownership == 'Company - Public' | Data_Proffesions_DF$Type_of_ownership == 'Company - Private')
+                                        & c(Data_Proffesions_DF$State == 'CA' | Data_Proffesions_DF$State == 'NY')),]
+
+colnames(DS_Jobs_DF) <- gsub('_',' ',colnames(DS_Jobs_DF))
+colnames(DA_Jobs_DF) <- gsub('_',' ',colnames(DA_Jobs_DF))
+
+DS_Jobs_DF %>%
+      kbl() %>%
+      kable_styling()
+
+DA_Jobs_DF %>%
+  kbl() %>%
+  kable_styling()
