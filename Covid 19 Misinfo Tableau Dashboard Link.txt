@@ -1,2 +1,1 @@
-https://public.tableau.com/app/profile/steven.horton/viz/Covid19_Misinfo/Hashtag_Frequency_Full_Year?publish=yes
-
+https://public.tableau.com/views/Covid19_Misinfo/Hashtag_Frequency_Full_Year?:language=en-US&publish=yes&:display_count=n&:origin=viz_share_link
