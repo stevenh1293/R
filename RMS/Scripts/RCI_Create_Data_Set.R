@@ -13,13 +13,13 @@ Generation <- c(sample('Gen Z',round(769*.15),replace = T),
 
 #Employment Percentage
 Employment_Status <- c(sample('Employed_for_wages',round(769*.481),replace = T),
-                       sample('Employed_for_wages',round(769*.21),replace = T),
-                       sample('Employed_for_wages',round(769*.06),replace = T),
-                       sample('Employed_for_wages',round(769*.06),replace = T),
-                       sample('Employed_for_wages',round(769*.07),replace = T),
-                       sample('Employed_for_wages',round(769*.06),replace = T),
-                       sample('Employed_for_wages',round(769*.04),replace = T),
-                       sample('Employed_for_wages',round(769*.02),replace = T))
+                       sample('Retired',round(769*.21),replace = T),
+                       sample('Self-employed',round(769*.06),replace = T),
+                       sample('Homemaker',round(769*.06),replace = T),
+                       sample('Unable to work',round(769*.07),replace = T),
+                       sample('Out of work (not looking)',round(769*.06),replace = T),
+                       sample('Student',round(769*.04),replace = T),
+                       sample('Out of work (but looking)',round(769*.02),replace = T))
 
 #Region Percentage
 Region <- c(sample('West',round(769*.21),replace = T),
