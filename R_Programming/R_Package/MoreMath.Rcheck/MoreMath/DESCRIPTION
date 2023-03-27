@@ -1,0 +1,16 @@
+Package: MoreMath
+Title: Calculate mode of a vector.
+Version: 0.0.0.9000
+Authors@R: 
+    person("Steven", "Horton", , "stevenh1293@gmail.com", role = c("aut", "cre"),
+           comment = c(ORCID = "NA"))
+Description: Calculates the mode of a vector.
+License: GNU
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.2.3
+NeedsCompilation: no
+Packaged: 2023-03-27 02:57:48 UTC; steve
+Author: Steven Horton [aut, cre] (NA)
+Maintainer: Steven Horton <stevenh1293@gmail.com>
+Built: R 4.2.2; ; 2023-03-27 02:57:52 UTC; windows
