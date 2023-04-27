@@ -1,0 +1,17 @@
+Package: FileR
+Title: Package for navigating working directory and extracting compressed files with user input
+Version: 0.1.2
+Authors@R: 
+    person("Steven", "Horton", , "stevenh1293@gmail.com", role = c("aut", "cre"),
+           comment = c(ORCID = "NA"))
+Description: This package is meant to make navigating and setting the working directory, as well as extracting to and from
+    different directories a bit easier. While users with R Studio can easily set the working directory with the GUI, users
+    who only have a CLI may benefit from this package. Setting the working directory or finding the directory you want can
+    be a bit tedious without a GUI, so this makes it a bit simpler. For extracting files, this makes it easier for both
+    users who use either a GUI or a CLI. Right now this only extracts two main file types which are .zip and .gz files, so
+    this should only be used by windows users. Neither Mac or Linux have been tested with this.
+License: GNU
+Imports: R.utils
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.2.3
